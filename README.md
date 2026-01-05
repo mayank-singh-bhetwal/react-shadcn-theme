@@ -55,14 +55,24 @@ import "react-shadcn-theme/styles.css";
 
 3. **Wrap your app with the ThemeProvider**:
 
+You can optionally pass a `defaultTheme` to set the initial theme:
+
 ```tsx
 function App() {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme={{ color: "blue", mode: "dark" }}>
       {/* Your app content */}
     </ThemeProvider>
   );
 }
+```
+
+Or with just one property:
+
+```tsx
+<ThemeProvider defaultTheme={{ mode: "dark" }}>
+  {/* Your app content */}
+</ThemeProvider>
 ```
 
 4. **Use the `useTheme` hook** anywhere in your components:

@@ -1,4 +1,4 @@
-import React, { createContext, type ReactNode, useState, useContext, useEffect } from "react";
+import { createContext, type ReactNode, useState, useContext, useEffect, createElement, useLayoutEffect } from "react";
 
 export const colors = ["zinc", "slate", "stone", "gray", "neutral", "red", "rose", "orange", "green", "blue", "yellow", "violet"] as const;
 export const modes = ["light", "dark", "system"] as const;
@@ -8,7 +8,7 @@ export type Mode = typeof modes[number];
 
 export type Theme = { color: Color; mode: Mode; };
 
-export const defaultTheme: Theme = { color: "slate", mode: "system" };
+type DefaultTheme = { color?: Color; mode?: Mode; };
 
 export const ThemeContext = createContext<{
   theme: Theme;
@@ -18,21 +18,30 @@ export const ThemeContext = createContext<{
   }) => void;
   isDarkMode: (_mode?: Mode | undefined) => boolean;
 }>({
-  theme: defaultTheme,
+  theme: { color: "slate", mode: "system" },
   setTheme: (_newTheme: { mode?: Mode; color?: Color }) => { },
   isDarkMode: (_mode?: Mode) => true
 });
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState(defaultTheme);
+export function ThemeProvider({
+  defaultTheme = {},
+  children
+}: {
+  defaultTheme?: DefaultTheme;
+  children: ReactNode;
+}) {
+  const [theme, setTheme] = useState<Theme>({
+    color: defaultTheme?.color ?? "slate",
+    mode: defaultTheme?.mode ?? "system"
+  });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const themeColor = (localStorage.getItem("theme-color") ?? "") as Color;
     const themeMode = (localStorage.getItem("theme-mode") ?? "") as Mode;
 
     setTheme({
-      color: colors.includes(themeColor) ? themeColor : defaultTheme.color,
-      mode: modes.includes(themeMode) ? themeMode : defaultTheme.mode
+      color: colors.includes(themeColor) ? themeColor : theme.color,
+      mode: modes.includes(themeMode) ? themeMode : theme.mode
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,24 +65,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch (e) { return false; }
   };
 
-  return React.createElement(ThemeContext.Provider, {
-    value: {
-      theme: theme,
-      setTheme: ({ color, mode }: { color?: Color; mode?: Mode }) => {
-        setTheme({
-          color: color ?? theme.color,
-          mode: mode ?? theme.mode
-        });
+  return (
+    createElement(
+      ThemeContext.Provider,
+      {
+        value: {
+          theme, isDarkMode,
+          setTheme: ({ color, mode }: { color?: Color; mode?: Mode }) => {
+            setTheme({
+              color: color ?? theme.color,
+              mode: mode ?? theme.mode
+            });
 
-        localStorage.setItem("theme-color", color ?? theme.color);
-        localStorage.setItem("theme-mode", mode ?? theme.mode);
+            localStorage.setItem("theme-color", color ?? theme.color);
+            localStorage.setItem("theme-mode", mode ?? theme.mode);
+          }
+        }
       },
-      isDarkMode: isDarkMode
-    }
-  }, React.createElement(ThemeScript), children);
+      createElement(ThemeScript, { defaultTheme: theme }),
+      children
+    )
+  );
 }
 
-function ThemeScript() {
+function ThemeScript({ defaultTheme }: { defaultTheme: Theme; }) {
   const scriptContent = `
     (function() {
       const defaultTheme = {
@@ -106,8 +121,8 @@ function ThemeScript() {
     })();
   `;
 
-  return React.createElement("script", { dangerouslySetInnerHTML: { __html: scriptContent } });
-};
+  return createElement("script", { dangerouslySetInnerHTML: { __html: scriptContent } });
+}
 
 export function useTheme() {
   const context = useContext(ThemeContext);
