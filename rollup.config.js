@@ -8,12 +8,14 @@ export default {
     {
       file: "dist/index.js",
       format: "cjs",
-      sourcemap: true
+      sourcemap: true,
+      banner: '"use client";'
     },
     {
       file: "dist/index.esm.js",
       format: "esm",
-      sourcemap: true
+      sourcemap: true,
+      banner: '"use client";'
     }
   ],
   plugins: [

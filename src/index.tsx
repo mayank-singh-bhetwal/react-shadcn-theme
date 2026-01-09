@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, type ReactNode, useState, useContext, useEffect, createElement, useLayoutEffect } from "react";
 
 export const colors = ["zinc", "slate", "stone", "gray", "neutral", "red", "rose", "orange", "green", "blue", "yellow", "violet"] as const;
